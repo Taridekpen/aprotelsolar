@@ -1,0 +1,12 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+tests/.mongo-uri
+apps/web/dist/
+.vite/
+*.tsbuildinfo

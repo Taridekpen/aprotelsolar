@@ -1,0 +1,34 @@
+{
+  "name": "aprotel-solar",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Aprotel Solar monorepo: API, shared contracts, and solar engine.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run build -w @aprotel/shared && npm run build -w @aprotel/solar-engine && npm run dev -w @aprotel/api",
+    "dev:web": "npm run dev -w @aprotel/web",
+    "dev:site": "npm run dev -w @aprotel/site",
+    "build": "npm run build -w @aprotel/shared && npm run build -w @aprotel/solar-engine && npm run build -w @aprotel/api && npm run build -w @aprotel/web && npm run build -w @aprotel/site",
+    "build:api": "npm run build -w @aprotel/shared && npm run build -w @aprotel/solar-engine && npm run build -w @aprotel/api",
+    "build:site": "npm run build -w @aprotel/solar-engine && npm run build -w @aprotel/site",
+    "build:web": "npm run build -w @aprotel/shared && npm run build -w @aprotel/web",
+    "typecheck": "npm run build -w @aprotel/shared && npm run build -w @aprotel/solar-engine && npm run typecheck -w @aprotel/api && npm run typecheck -w @aprotel/web && npm run typecheck -w @aprotel/site",
+    "test": "vitest run",
+    "admin:bootstrap": "npm run build -w @aprotel/shared && npm run admin:bootstrap -w @aprotel/api",
+    "seed": "npm run build -w @aprotel/shared && npm run seed -w @aprotel/api",
+    "start": "npm run start -w @aprotel/api"
+  },
+  "devDependencies": {
+    "@types/supertest": "^6.0.3",
+    "mongodb-memory-server": "^10.2.3",
+    "supertest": "^7.1.4",
+    "vitest": "^3.2.4"
+  }
+}

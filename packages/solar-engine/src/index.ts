@@ -1,0 +1,12 @@
+export { calculateEnergyRequirements, recommendSystem, ENGINE_PHASE, ENGINE_VERSION } from './contract.js';
+export type { EngineResult } from './contract.js';
+export { applianceSchema, calculateInputSchema, recommendInputSchema } from './schema.js';
+export type { ApplianceInput, CalculateInput, RecommendInput } from './schema.js';
+export { APPLIANCE_CATALOGUE } from './appliances.js';
+export type { ApplianceDefinition } from './appliances.js';
+export { buildDesign } from './design.js';
+export { adjustedVoltage, planString, voltagesMatch } from './compatibility.js';
+export { nominalBatteryWh } from './battery.js';
+export { requiredArrayW } from './pv.js';
+export { solarResourceFor } from './solar-resource.js';
+export type { CatalogueItem, EngineOptions, SolarDesign, SystemConfiguration, RecommendedProduct, RuntimeScenario } from './types.js';
