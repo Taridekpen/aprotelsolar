@@ -39,7 +39,7 @@ Local development is unchanged. Leave `VITE_API_URL` unset and the Vite dev serv
 
 The Blueprint already sets `NODE_ENV=production`, `TRUST_PROXY=true`, `PAYMENT_PROVIDER=none`, `COOKIE_SAMESITE=none`, and `COOKIE_SECURE=true`. `none` means the API starts without Paystack or Flutterwave. Online checkout is not part of the public site. `SameSite=None` is required so the admin on Vercel can keep its sign-in cookie when it calls Render.
 
-4. Deploy. The build command is `npm install && npm run build:api`. The start command is `npm run start`. Render checks `GET /health`.
+4. Deploy. The build command is `npm install --include=dev && npm run build:api`. Render sets `NODE_ENV=production` before the build, and a plain `npm install` then skips the TypeScript packages the API needs to compile. The start command is `npm run start`. Render checks `GET /health`.
 5. Open `https://YOUR-SERVICE.onrender.com/health`. It should return `{ "data": { "status": "ok" } }`. `GET /ready` returns ready only after MongoDB is connected.
 6. On the Render shell, run `npm run seed` once. That inserts categories, offices, and services if they are missing. The bootstrap administrator is created on startup from the three `BOOTSTRAP_ADMIN_*` variables. It does not reset an existing password.
 
