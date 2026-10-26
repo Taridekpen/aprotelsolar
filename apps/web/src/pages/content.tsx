@@ -36,6 +36,15 @@ export function ContentPage() {
   const products = useQuery({ queryKey: ['product-options'], queryFn: () => apiList<Option>(`/api/v1/admin/products${queryString({ pageSize: 100, status: 'published' })}`), enabled: type === 'featured_catalog' });
   const services = useQuery({ queryKey: ['services'], queryFn: () => api<Option[]>('/api/v1/admin/services'), enabled: type === 'featured_catalog' });
 
+  async function remove(entry: Entry) {
+    const ok = await confirm({ title: 'Delete this entry?', body: `${entry.title} will be removed from the website.`, danger: true, confirmLabel: 'Delete' });
+    if (!ok) return;
+    await api(`/api/v1/admin/content/${entry.id}`, { method: 'DELETE' });
+    if (editing?.id === entry.id) setEditing(null);
+    toast('Content deleted.');
+    await client.invalidateQueries({ queryKey: ['content'] });
+  }
+
   async function save(form: FormData) {
     setError(null);
     const body = bodyFrom(type, form, editing?.body);
@@ -83,7 +92,7 @@ export function ContentPage() {
                     <td><Badge value={entry.publicationStatus} /></td>
                     <td>
                       <button className="btn secondary" type="button" onClick={() => setEditing(entry)}>Edit</button>
-                      {can('content:write') ? <button className="btn danger" type="button" onClick={() => void confirm({ title: 'Archive this entry?', body: entry.title, danger: true, confirmLabel: 'Archive' }).then(async (ok) => { if (!ok) return; await api(`/api/v1/admin/content/${entry.id}`, { method: 'DELETE' }); await client.invalidateQueries({ queryKey: ['content'] }); })}>Archive</button> : null}
+                      {can('content:write') ? <button className="btn danger" type="button" onClick={() => void remove(entry)}>Delete</button> : null}
                     </td>
                   </tr>
                 ))}

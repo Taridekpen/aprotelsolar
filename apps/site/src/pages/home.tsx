@@ -62,20 +62,26 @@ export function HomePage() {
           {hero?.imageIds[0] ? <Photo id={hero.imageIds[0]} alt={headline} priority /> : <img src={scenes.hero} alt="A home with rooftop solar panels at dusk" />}
         </div>
       </section>
-      {banners.map((banner) => {
-        const message = textBody(banner.body, 'message') || banner.summary;
-        const href = textBody(banner.body, 'href');
-        return (
-          <section className="promo-band" key={banner.id}>
-            {banner.imageIds[0] ? <Photo id={banner.imageIds[0]} alt="" /> : null}
-            <div>
-              <strong>{banner.title}</strong>
-              {message && message !== banner.title ? <p>{message}</p> : null}
-              {href ? <Action href={href} className="promo-link">{href.startsWith('/') ? 'View' : href}</Action> : null}
-            </div>
-          </section>
-        );
-      })}
+      {banners.length ? (
+        <div className="wrap promo-list">
+          {banners.map((banner) => {
+            const message = textBody(banner.body, 'message') || banner.summary;
+            const href = textBody(banner.body, 'href');
+            return (
+              <article className="promo-card" key={banner.id}>
+                <div className="promo-media">
+                  <Photo id={banner.imageIds[0]} alt="" fallback={scenes.hero} />
+                </div>
+                <div className="promo-copy">
+                  <h2>{banner.title}</h2>
+                  {message && message !== banner.title ? <p>{message}</p> : null}
+                  {href ? <Action href={href} className="btn">Read more</Action> : null}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      ) : null}
       <div className="wrap">
         <Reveal>
         <div className="trust-row">

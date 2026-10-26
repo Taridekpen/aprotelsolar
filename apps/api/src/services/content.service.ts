@@ -87,8 +87,13 @@ export async function updateContent(id: string, input: Partial<Omit<ContentInput
   return presentContent(entry);
 }
 
-export async function archiveContent(id: string, actor: Actor) {
-  return updateContent(id, { publicationStatus: 'archived' }, actor);
+export async function deleteContent(id: string, actor: Actor) {
+  const entry = await ContentEntryModel.findById(id);
+  if (!entry) throw new AppError('NOT_FOUND', 'Content was not found', 404);
+  await syncMediaUsage({ resourceType: 'content', resourceId: id, field: 'images' }, []);
+  await entry.deleteOne();
+  await recordAudit({ actorId: actor.id, action: 'content.delete', resourceType: 'content', resourceId: id, ipAddress: actor.ipAddress, userAgent: actor.userAgent });
+  return { deleted: true };
 }
 
 function presentContent(entry: {

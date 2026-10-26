@@ -59,7 +59,7 @@ import { openApiSpec } from '../openapi/spec.js';
 import { changePassword, createAdministrator, currentCsrf, listAdministrators, login, logout, requestPasswordReset, resetPassword, updateAdministrator } from '../services/auth.service.js';
 import { createBranch, listAdminBranches, listPublicBranches, updateBranch } from '../services/branch.service.js';
 import { archiveCategory, createCategory, listAdminCategories, listPublicCategories, reorderCategories, updateCategory } from '../services/category.service.js';
-import { archiveContent, createContent, getPublicPage, listAdminContent, updateContent } from '../services/content.service.js';
+import { createContent, deleteContent, getPublicPage, listAdminContent, updateContent } from '../services/content.service.js';
 import { createEnquiry, getEnquiry, listEnquiries, updateEnquiry } from '../services/enquiry.service.js';
 import {
   adjustStock,
@@ -367,7 +367,7 @@ export function createV1Router(env: Env): Router {
     sendData(res, await updateContent(req.params.id, req.body, actorFrom(req)));
   }));
   admin.delete('/content/:id', requirePermission('content:write'), csrf, asyncHandler(async (req, res) => {
-    sendData(res, await archiveContent(req.params.id, actorFrom(req)));
+    sendData(res, await deleteContent(req.params.id, actorFrom(req)));
   }));
 
   admin.get('/enquiries', requirePermission('enquiries:read'), validateQuery(enquiryQuery), asyncHandler(async (req, res) => {
