@@ -140,12 +140,12 @@ function BodyFields({ type, body, products, services, stats, setStats, links, se
     ? <Field key={name} label={label}><textarea name={name} defaultValue={String(body[source] ?? '')} /></Field>
     : <Field key={name} label={label}><input name={name} defaultValue={String(body[source] ?? '')} /></Field>;
   if (type === 'homepage_hero') return <>{text('headline', 'Headline')}{text('subheadline', 'Subheadline', true)}{text('primaryCtaLabel', 'Primary button')}{text('primaryCtaHref', 'Primary link')}{text('secondaryCtaLabel', 'Secondary button')}{text('secondaryCtaHref', 'Secondary link')}</>;
-  if (type === 'promotional_banner') return <>{text('message', 'Message')}{text('href', 'Link')}{text('startsAt', 'Starts')}{text('endsAt', 'Ends')}</>;
+  if (type === 'promotional_banner') return <>{text('message', 'Message')}{text('href', 'Link')}{dateField('startsAt', 'Starts', body.startsAt)}{dateField('endsAt', 'Ends', body.endsAt)}</>;
   if (type === 'about' || type === 'contact_info' || type === 'featured_section') return <>{text('heading', 'Heading')}{text('body', 'Body', true)}</>;
   if (type === 'company_location') return <>{text('name', 'Name')}{text('address', 'Address', true)}{text('phone', 'Phone')}{text('email', 'Email')}</>;
   if (type === 'testimonial') return <>{text('quote', 'Quote', true)}{text('author', 'Author')}{text('role', 'Role')}{text('location', 'Location')}</>;
   if (type === 'faq') return <>{text('question', 'Question')}{text('answer', 'Answer', true)}</>;
-  if (type === 'completed_installation') return <>{text('projectTitle', 'Project title', false, 'title')}{text('location', 'Location')}{text('summary', 'Summary', true)}{text('completedOn', 'Completed on')}</>;
+  if (type === 'completed_installation') return <>{text('projectTitle', 'Project title', false, 'title')}{text('location', 'Location')}{text('summary', 'Summary', true)}{dateField('completedOn', 'Completed on', body.completedOn)}</>;
   if (type === 'project_gallery') return <>{text('galleryTitle', 'Gallery title', false, 'title')}{text('caption', 'Caption')}</>;
   if (type === 'seo_metadata') return <>{text('page', 'Page key')}{text('metadataTitle', 'Metadata title', false, 'title')}{text('description', 'Description', true)}</>;
   if (type === 'company_statistics') return (
@@ -253,11 +253,28 @@ function ContentPreview({ form, entry, type, stats, links, imageCount, products,
   );
 }
 
+function dateField(name: string, label: string, stored: unknown) {
+  return (
+    <Field key={name} label={label}>
+      <input name={name} type="date" defaultValue={calendarDay(stored)} />
+    </Field>
+  );
+}
+
+function calendarDay(value: unknown) {
+  const match = String(value ?? '').match(/^(\d{4}-\d{2}-\d{2})/);
+  return match?.[1] ?? '';
+}
+
+function isoDay(day: string) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(day) ? `${day}T00:00:00.000Z` : null;
+}
+
 function bodyFrom(type: string, form: FormData, previous?: Record<string, unknown>) {
   const value = (key: string) => String(form.get(key) ?? previous?.[key] ?? '');
   const selected = (key: string) => [...form.getAll(key)].map(String);
   if (type === 'homepage_hero') return { headline: value('headline'), subheadline: value('subheadline'), primaryCtaLabel: value('primaryCtaLabel'), primaryCtaHref: value('primaryCtaHref'), secondaryCtaLabel: value('secondaryCtaLabel'), secondaryCtaHref: value('secondaryCtaHref') };
-  if (type === 'promotional_banner') return { message: value('message'), href: value('href'), startsAt: value('startsAt') || null, endsAt: value('endsAt') || null };
+  if (type === 'promotional_banner') return { message: value('message'), href: value('href'), startsAt: isoDay(value('startsAt')), endsAt: isoDay(value('endsAt')) };
   if (type === 'about' || type === 'featured_section') return { heading: value('heading'), body: value('body') };
   if (type === 'contact_info') return { heading: value('heading'), body: value('body') };
   if (type === 'company_location') return { name: value('name'), address: value('address'), phone: value('phone'), email: value('email') || undefined };
