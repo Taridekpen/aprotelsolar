@@ -76,14 +76,14 @@ export function buildDesign(input: CalculateInput | RecommendInput, catalogue: C
         unmet = {
           message: full.configurations.length
             ? `The lowest technically valid equipment total is ₦${Math.round(full.configurations[0]!.equipmentCostNaira).toLocaleString('en-NG')}, which is above the stated budget. No smaller compatible set was published.`
-            : 'No verified, in-stock, electrically compatible equipment set is published for this load.',
+            : 'No electrically compatible panel, battery, and inverter set is published for this load.',
           equipmentCostNaira: full.configurations[0]?.equipmentCostNaira ?? null,
         };
       }
     }
   } else if (!recommendations.length) {
     unmet = {
-      message: 'No verified in-stock inverter, battery, and solar panel combination satisfies the electrical checks. The wattage and energy figures are still calculated. Missing equipment is not invented.',
+      message: 'No published inverter, battery, and solar panel combination satisfies the electrical checks. The wattage and energy figures are still calculated. Missing equipment is not invented.',
       equipmentCostNaira: null,
     };
   }

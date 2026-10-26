@@ -46,7 +46,7 @@ export function ContentPage() {
       body,
       imageIds: String(form.get('imageIds') ?? '').split(',').filter(Boolean),
       displayOrder: Number(form.get('displayOrder') ?? 0),
-      publicationStatus: String(form.get('publicationStatus') ?? 'draft'),
+      publicationStatus: String(form.get('publicationStatus') ?? 'published'),
       seo: { title: String(form.get('seoTitle') ?? ''), description: String(form.get('seoDescription') ?? '') },
     };
     try {
@@ -116,10 +116,10 @@ function ContentForm({ type, entry, products, services, error, onSave, onClear }
       <Field label="Summary"><input name="summary" defaultValue={entry?.summary ?? ''} /></Field>
       <BodyFields type={type} body={body} products={products} services={services} stats={stats} setStats={setStats} links={links} setLinks={setLinks} />
       <Field label="Display order"><input name="displayOrder" type="number" defaultValue={entry?.displayOrder ?? 0} /></Field>
-      <Field label="Publication">
-        <select name="publicationStatus" defaultValue={entry?.publicationStatus ?? 'draft'}>
-          <option value="draft">Draft</option>
+      <Field label="Publication" hint="Published entries appear on the website. Drafts stay in the admin.">
+        <select name="publicationStatus" defaultValue={entry?.publicationStatus ?? 'published'}>
           <option value="published">Published</option>
+          <option value="draft">Draft</option>
           <option value="inactive">Inactive</option>
         </select>
       </Field>

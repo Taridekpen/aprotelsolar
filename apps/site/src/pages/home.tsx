@@ -5,7 +5,7 @@ import { APPLIANCE_CATALOGUE } from '@aprotel/solar-engine';
 import { api, apiList, queryString } from '../lib/api';
 import { cart } from '../lib/cart';
 import { naira } from '../lib/format';
-import type { Branch, Category, ContentPage, Product, Service, SolarPackage } from '../lib/types';
+import type { Branch, Category, ContentPage, Entry, Product, Service, SolarPackage } from '../lib/types';
 import { textBody } from '../lib/types';
 import { ErrorNote, Loading, Photo, Reveal, useSeo } from '../components/chrome';
 import { sceneForProfile, scenes, serviceScene } from '../lib/scenes';
@@ -17,19 +17,30 @@ export function HomePage() {
   const about = useQuery({ queryKey: ['content', 'about'], queryFn: () => api<ContentPage>('/api/v1/content/about') });
   const projects = useQuery({ queryKey: ['content', 'installations'], queryFn: () => api<ContentPage>('/api/v1/content/installations') });
   const categories = useQuery({ queryKey: ['categories'], queryFn: () => api<Category[]>('/api/v1/categories') });
-  const products = useQuery({ queryKey: ['products', 'home'], queryFn: () => apiList<Product>(`/api/v1/products${queryString({ pageSize: 8, sort: 'createdAt' })}`) });
+  const products = useQuery({ queryKey: ['products', 'home'], queryFn: () => apiList<Product>(`/api/v1/products${queryString({ pageSize: 100, sort: 'createdAt' })}`) });
   const services = useQuery({ queryKey: ['services'], queryFn: () => api<Service[]>('/api/v1/services') });
   const packages = useQuery({ queryKey: ['packages', 'home'], queryFn: () => apiList<SolarPackage>('/api/v1/solar-packages?pageSize=4') });
   const branches = useQuery({ queryKey: ['branches'], queryFn: () => api<Branch[]>('/api/v1/branches') });
   const [added, setAdded] = useState('');
 
-  const hero = home.data?.items.find((item) => item.type === 'homepage_hero');
+  const homeItems = home.data?.items ?? [];
+  const hero = homeItems.find((item) => item.type === 'homepage_hero');
+  const banners = homeItems.filter((item) => item.type === 'promotional_banner');
+  const sections = homeItems.filter((item) => item.type === 'featured_section');
+  const catalogs = homeItems.filter((item) => item.type === 'featured_catalog');
+  const stats = statItems(homeItems.filter((item) => item.type === 'company_statistics'));
+  const quotes = homeItems.filter((item) => item.type === 'testimonial');
   const aboutEntry = about.data?.items.find((item) => item.type === 'about');
   const publishedHeadline = hero ? textBody(hero.body, 'headline') || hero.title : '';
   const headline = publishedHeadline && publishedHeadline !== 'Aprotel Solar' ? publishedHeadline : 'Reliable solar solutions for homes and businesses';
   const subheadline = hero ? textBody(hero.body, 'subheadline') || hero.summary : 'Panels, inverters, batteries, and installation from Aprotel Services Nig. Ltd.';
+  const actions = heroLinks(hero);
   useSeo(hero?.seo.title || 'Solar equipment and installation', hero?.seo.description || subheadline);
-  const catalogue = products.data?.items ?? [];
+  const pickedProducts = new Set(catalogs.flatMap((entry) => idList(entry.body, 'productIds')));
+  const pickedServices = new Set(catalogs.flatMap((entry) => idList(entry.body, 'serviceIds')));
+  const catalogue = [...(products.data?.items ?? [])].sort((a, b) => rank(pickedProducts.has(a.id), a.featured) - rank(pickedProducts.has(b.id), b.featured));
+  const serviceList = [...(services.data ?? [])].sort((a, b) => Number(pickedServices.has(b.id)) - Number(pickedServices.has(a.id)));
+  const productHeading = catalogs.map((entry) => textBody(entry.body, 'heading')).find(Boolean) || (catalogue.some((product) => product.featured || pickedProducts.has(product.id)) ? 'Featured products' : 'Catalogue');
   const projectItems = (projects.data?.items ?? []).filter((item) => item.type === 'completed_installation' || item.type === 'project_gallery');
   const central = branches.data?.find((branch) => branch.isCentral) ?? branches.data?.[0];
   const solutions = solutionLinks(categories.data ?? []);
@@ -41,27 +52,62 @@ export function HomePage() {
       <section className="home-hero">
         <div className="copy">
           <p className="kicker">Clean energy, brighter living</p>
-          <h1>{headline.includes('homes and businesses') ? <>Reliable solar solutions for <span className="gold">homes and businesses</span></> : headline}</h1>
+          <h1>{publishedHeadline ? headline : <>Reliable solar solutions for <span className="gold">homes and businesses</span></>}</h1>
           {subheadline ? <p className="lede">{subheadline}</p> : null}
           <div className="hero-actions">
-            <Link className="btn" to="/products">Explore products</Link>
-            <Link className="btn-gold" to="/calculate">Calculate your solar needs</Link>
+            {actions.map((action) => <Action key={action.href + action.label} href={action.href} className={action.gold ? 'btn-gold' : 'btn'}>{action.label}</Action>)}
           </div>
         </div>
         <div className="hero-art">
-          <img src={scenes.hero} alt="A home with rooftop solar panels at dusk" />
+          {hero?.imageIds[0] ? <Photo id={hero.imageIds[0]} alt={headline} priority /> : <img src={scenes.hero} alt="A home with rooftop solar panels at dusk" />}
         </div>
       </section>
+      {banners.map((banner) => {
+        const message = textBody(banner.body, 'message') || banner.summary;
+        const href = textBody(banner.body, 'href');
+        return (
+          <section className="promo-band" key={banner.id}>
+            {banner.imageIds[0] ? <Photo id={banner.imageIds[0]} alt="" /> : null}
+            <div>
+              <strong>{banner.title}</strong>
+              {message && message !== banner.title ? <p>{message}</p> : null}
+              {href ? <Action href={href} className="promo-link">{href.startsWith('/') ? 'View' : href}</Action> : null}
+            </div>
+          </section>
+        );
+      })}
       <div className="wrap">
         <Reveal>
         <div className="trust-row">
           <article><strong>Published prices</strong><span>What you see is the current catalogue price.</span></article>
-          <article><strong>Named equipment</strong><span>Recommendations use verified, in-stock products only.</span></article>
+          <article><strong>Named equipment</strong><span>Recommendations use the published catalogue specifications.</span></article>
           <article><strong>Installation support</strong><span>Ask for a visit from the contact page.</span></article>
           <article><strong>Engineer review</strong><span>A custom system stays pending until it is approved.</span></article>
         </div>
         </Reveal>
       </div>
+
+      {stats.length ? (
+        <section className="section" style={{ paddingBottom: 0 }}>
+          <div className="wrap">
+            <div className="stat-row">
+              {stats.map((item) => <article key={`${item.label}-${item.value}`}><strong>{item.value}</strong><span>{item.label}</span></article>)}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {sections.map((section) => (
+        <section className="section" key={section.id} style={{ paddingBottom: 0 }}>
+          <div className="wrap prose-split">
+            {section.imageIds[0] ? <Photo id={section.imageIds[0]} alt={textBody(section.body, 'heading') || section.title} /> : null}
+            <div>
+              <h2>{textBody(section.body, 'heading') || section.title}</h2>
+              <p>{textBody(section.body, 'body') || section.summary}</p>
+            </div>
+          </div>
+        </section>
+      ))}
 
       <section className="section">
         <div className="wrap">
@@ -97,14 +143,14 @@ export function HomePage() {
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="wrap">
           <div className="section-head">
-            <h2>{catalogue.some((product) => product.featured) ? 'Featured products' : 'Catalogue'}</h2>
+            <h2>{productHeading}</h2>
             <Link className="text-link" to="/products">View all products</Link>
           </div>
           {catalogue.length ? (
             <div className="product-row">
-              {catalogue.slice(0, 4).map((product) => (
+              {catalogue.map((product) => (
                   <article className="product-card" key={product.id}>
-                    {product.featured ? <span className="pill">Featured</span> : null}
+                    {pickedProducts.has(product.id) || product.featured ? <span className="pill">Featured</span> : null}
                     <Link to={`/products/${product.slug}`}>
                       <div className="media"><Photo id={product.imageIds[0]} alt={product.name} fallback={sceneForProfile(product.specificationProfile)} /></div>
                       <h3>{product.name}</h3>
@@ -129,10 +175,11 @@ export function HomePage() {
               <Link className="text-link" to="/services">View all services</Link>
             </div>
             <div className="service-grid">
-              {services.data?.map((service) => (
+              {serviceList.map((service) => (
                 <Link className="service-card" key={service.id} to={`/services/${service.slug}`}>
                   <div className="media">{service.imageIds[0] ? <Photo id={service.imageIds[0]} alt="" /> : <img src={serviceScene(service.slug)} alt="" />}</div>
                   <div>
+                    {pickedServices.has(service.id) ? <span className="pill">Featured</span> : null}
                     <h3>{service.name}</h3>
                     <p className="note">{service.description}</p>
                     <span className="text-link">Learn more</span>
@@ -160,6 +207,22 @@ export function HomePage() {
         </div>
       </section>
 
+      {quotes.length ? (
+        <section className="section">
+          <div className="wrap">
+            <div className="section-head"><h2>What customers say</h2></div>
+            <div className="home-quotes">
+              {quotes.map((quote) => (
+                <blockquote className="quote" key={quote.id}>
+                  {textBody(quote.body, 'quote') || quote.summary}
+                  <footer>{[textBody(quote.body, 'author'), textBody(quote.body, 'role'), textBody(quote.body, 'location')].filter(Boolean).join(', ')}</footer>
+                </blockquote>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       {projectItems.length ? (
         <section className="section">
           <div className="wrap">
@@ -168,7 +231,7 @@ export function HomePage() {
               <Link className="text-link" to="/projects">View all projects</Link>
             </div>
             <div className="project-grid">
-              {projectItems.slice(0, 4).map((project) => (
+              {projectItems.map((project) => (
                 <Link className="project-card" key={project.id} to="/projects">
                   <div className="media"><Photo id={project.imageIds[0]} alt="" fallback={scenes.hero} /></div>
                   <h3>{textBody(project.body, 'title') || project.title}</h3>
@@ -243,6 +306,51 @@ export function Stepper({ label, value, min, max, onChange }: { label: string; v
       <button type="button" aria-label={`Increase ${label}`} disabled={value >= max} onClick={() => onChange(value + 1)}>+</button>
     </div>
   );
+}
+
+function rank(picked: boolean, featured: boolean) {
+  if (picked) return 0;
+  if (featured) return 1;
+  return 2;
+}
+
+function idList(body: Record<string, unknown>, key: string) {
+  const value = body[key];
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+}
+
+function statItems(entries: Entry[]) {
+  return entries.flatMap((entry) => {
+    const items = entry.body.items;
+    if (!Array.isArray(items)) return [];
+    return items.flatMap((item) => {
+      if (!item || typeof item !== 'object') return [];
+      const row = item as { label?: string; value?: string };
+      return row.label && row.value ? [{ label: row.label, value: row.value }] : [];
+    });
+  });
+}
+
+function heroLinks(hero?: Entry) {
+  const links = [
+    linkFrom(hero, 'primaryCtaLabel', 'primaryCtaHref', false),
+    linkFrom(hero, 'secondaryCtaLabel', 'secondaryCtaHref', true),
+  ].filter((item): item is { label: string; href: string; gold: boolean } => item != null);
+  return links.length ? links : [
+    { label: 'Explore products', href: '/products', gold: false },
+    { label: 'Calculate your solar needs', href: '/calculate', gold: true },
+  ];
+}
+
+function linkFrom(entry: Entry | undefined, labelKey: string, hrefKey: string, gold: boolean) {
+  const label = entry ? textBody(entry.body, labelKey) : '';
+  const href = entry ? textBody(entry.body, hrefKey) : '';
+  return label && href ? { label, href, gold } : null;
+}
+
+function Action({ href, className, children }: { href: string; className: string; children: string }) {
+  if (href.startsWith('/')) return <Link className={className} to={href}>{children}</Link>;
+  return <a className={className} href={href}>{children}</a>;
 }
 
 function solutionLinks(categories: Category[]) {

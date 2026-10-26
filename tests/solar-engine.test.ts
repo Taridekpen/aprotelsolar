@@ -126,7 +126,7 @@ describe('solar calculation engine', () => {
     expect(rejected.ok).toBe(false);
   });
 
-  it('does not treat kVA as kW and does not recommend unverified or out-of-stock equipment', () => {
+  it('does not treat kVA as kW and still matches published specifications when stock is not tracked', () => {
     const lowVa = recommendSystem(
       { appliances: [{ name: 'Cooker', wattage: 1500, quantity: 1, hoursPerDay: 2, dayHours: 2, nightHours: 0 }], location: { state: 'Bayelsa' }, preferences: { backupHours: 4 } },
       [panel(), inverter({ vaRating: 2000 }), battery()],
@@ -144,14 +144,14 @@ describe('solar calculation engine', () => {
       { appliances: [fridge], location: { state: 'Bayelsa' }, preferences: { backupHours: 8 } },
       [panel({ specificationsVerified: false }), inverter(), battery()],
     );
-    expect(unverified.status).toBe('requirements_only');
-    expect(unverified.design.selected).toBeNull();
+    expect(unverified.status).toBe('designed');
+    expect(unverified.design.selected?.products.some((item) => item.role === 'solar_panel')).toBe(true);
 
     const noStock = recommendSystem(
       { appliances: [fridge], location: { state: 'Bayelsa' }, preferences: { backupHours: 8 } },
-      [panel({ inventoryQuantity: 0 }), inverter(), battery()],
+      [panel({ inventoryQuantity: 0 }), inverter({}, { inventoryQuantity: 0 }), battery({ inventoryQuantity: 0 })],
     );
-    expect(noStock.design.selected).toBeNull();
+    expect(noStock.design.selected?.products.map((item) => item.role).sort()).toEqual(['battery', 'inverter', 'solar_panel']);
   });
 
   it('recommends a compatible published set and refuses a budget that cannot buy it', () => {

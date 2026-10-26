@@ -18,10 +18,10 @@ const CALCULATE_MESSAGE =
   'Load, battery, inverter, and array requirements are calculated from the submitted appliances. This response does not select products and is not a performance guarantee.';
 
 const DESIGNED_MESSAGE =
-  'A compatible equipment set was found among verified, in-stock products. The prices are catalogue equipment prices. Installation is not approved until an engineer reviews the quotation.';
+  'A compatible equipment set was found among published catalogue products. The prices are catalogue equipment prices. Installation is not approved until an engineer reviews the quotation.';
 
 const REQUIREMENTS_MESSAGE =
-  'The electrical requirement is calculated. No verified, in-stock product combination passed the compatibility checks, so no equipment is recommended.';
+  'The electrical requirement is calculated. No published panel, battery, and inverter combination passed the compatibility checks, so no equipment is recommended.';
 
 export function calculateEnergyRequirements(input: CalculateInput, options?: EngineOptions): EngineResult<CalculateInput> {
   const validatedInput = calculateInputSchema.parse(input);

@@ -68,7 +68,7 @@ export const openApiSpec = {
     '/payments/verify': { post: { tags: ['Commerce'], summary: 'Server-to-server verification for Paystack or Flutterwave', responses: { '200': { description: 'Verified status' } } } },
     '/payments/webhooks/{provider}': { post: { tags: ['Commerce'], summary: 'Signed payment webhook', parameters: [{ name: 'provider', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Accepted' }, '401': { description: 'Bad signature' } } } },
     '/solar/calculate': { post: { tags: ['Solar'], summary: 'Calculate appliance energy and equipment requirements', responses: { '200': { description: 'Requirements only. No products are selected.' } } } },
-    '/solar/recommend': { post: { tags: ['Solar'], summary: 'Match the calculation to verified in-stock products', responses: { '200': { description: 'Design plus eligibility. selected is null when no compatible set exists.' } } } },
+    '/solar/recommend': { post: { tags: ['Solar'], summary: 'Match the calculation to published catalogue products', responses: { '200': { description: 'Design plus eligibility. selected is null when no compatible set exists.' } } } },
     '/admin/products': {
       get: { tags: ['Admin'], summary: 'List products', security: [{ sessionCookie: [] }], responses: { '200': { description: 'Products' } } },
       post: { tags: ['Admin'], summary: 'Create product', security: [{ sessionCookie: [], csrfHeader: [] }], responses: { '201': { description: 'Created' } } },

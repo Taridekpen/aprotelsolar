@@ -267,13 +267,16 @@ function readPanel(item: CatalogueItem): Panel | null {
   return { item, ratedW, voc, vmp, isc, imp, tempCoeffVoc };
 }
 
+const UNTRACKED_QUANTITY = 99;
+
 function usable(item: CatalogueItem) {
-  return item.specificationsVerified && item.sellingPriceNaira > 0 && stock(item) > 0;
+  return item.sellingPriceNaira > 0;
 }
 
 function stock(item: CatalogueItem) {
   const branchStock = item.branches?.length ? item.branches.reduce((sum, branch) => sum + Math.max(0, branch.available), 0) : item.inventoryQuantity;
-  return Math.min(item.inventoryQuantity, branchStock);
+  const recorded = item.branches?.length ? Math.min(item.inventoryQuantity, branchStock) : item.inventoryQuantity;
+  return recorded > 0 ? recorded : UNTRACKED_QUANTITY;
 }
 
 function productLine(item: CatalogueItem, role: RecommendedProduct['role'], quantity: number, reason: string): RecommendedProduct {

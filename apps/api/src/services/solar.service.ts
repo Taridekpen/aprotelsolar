@@ -39,7 +39,7 @@ export async function recommendSolar(input: RecommendInput) {
     branches: stock.get(String(product._id)) ?? [],
   }));
   const result = recommendSystem(input, catalogue, await engineOptions());
-  const verifiedPublishedProducts = catalogue.filter((item) => item.specificationsVerified && item.inventoryQuantity > 0).length;
+  const verifiedPublishedProducts = catalogue.filter((item) => item.sellingPriceNaira > 0).length;
   return {
     ...result,
     eligibility: {

@@ -227,6 +227,15 @@ h1 { margin: 0; font-size: clamp(34px, 5vw, 56px); }
   font-size: 12px; font-weight: 600;
 }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+.promo-band { display: flex; align-items: center; gap: 16px; margin: 0; padding: 18px 8vw; background: var(--color-gold); color: white; }
+.promo-band .photo, .promo-band img { width: 84px; height: 84px; object-fit: cover; border-radius: 10px; }
+.promo-band p { margin: 4px 0 0; }
+.promo-link { color: white; font-weight: 700; }
+.stat-row, .home-quotes { display: grid; gap: 16px; }
+.stat-row { grid-template-columns: repeat(4, 1fr); }
+.stat-row article { background: white; border: 1px solid var(--color-line); border-radius: 16px; padding: 18px; }
+.stat-row strong { display: block; font-size: 28px; color: var(--color-brand); }
+.home-quotes { grid-template-columns: 1fr 1fr; }
 .hero-art { min-height: 320px; overflow: hidden; padding: 0; }
 .hero-art img, .planner-art img { width: 100%; height: 100%; object-fit: cover; }
 .hero-art img { min-height: 520px; animation: kenburns 26s ease-in-out infinite alternate; }
@@ -336,7 +345,7 @@ h1 { margin: 0; font-size: clamp(34px, 5vw, 56px); }
 
 @media (max-width: 980px) {
   .home-hero, .planner, .why .wrap, .cta-band .wrap, .calc-page, .footer-grid { grid-template-columns: 1fr; }
-  .solution-grid, .service-grid, .product-row, .project-grid, .trust-row { grid-template-columns: 1fr 1fr; }
+  .solution-grid, .service-grid, .product-row, .project-grid, .trust-row, .stat-row, .home-quotes { grid-template-columns: 1fr 1fr; }
   .result-card { position: static; }
   .home-hero .copy { padding: 48px 20px 32px; }
   .hero-art img { min-height: 260px; }
