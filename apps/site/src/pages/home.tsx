@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { APPLIANCE_CATALOGUE } from '@aprotel/solar-engine';
 import { api, apiList, queryString } from '../lib/api';
@@ -48,6 +48,7 @@ export function HomePage() {
   if (home.isLoading) return <Loading label="Loading the homepage" />;
   return (
     <>
+      {catalogue.length ? <ProductOffer products={catalogue} /> : null}
       <ErrorNote error={home.error} />
       <section className="home-hero">
         <div className="copy">
@@ -262,6 +263,43 @@ export function HomePage() {
         </div>
       </section>
     </>
+  );
+}
+
+function ProductOffer({ products }: { products: Product[] }) {
+  const navigate = useNavigate();
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const [product] = useState(() => products[Math.floor(Math.random() * products.length)]!);
+  const [open, setOpen] = useState(true);
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    closeRef.current?.focus();
+    function onKey(event: KeyboardEvent) {
+      if (event.key === 'Escape') setOpen(false);
+    }
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = previous;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+  if (!open) return null;
+  return (
+    <div className="offer-backdrop" onClick={() => setOpen(false)}>
+      <div className="offer-card" role="dialog" aria-modal="true" aria-labelledby="offer-title" onClick={(event) => event.stopPropagation()}>
+        <button ref={closeRef} className="offer-close" type="button" aria-label="Close offer" onClick={() => setOpen(false)}>×</button>
+        <p className="eyebrow">From the catalogue</p>
+        <div className="offer-media"><Photo id={product.imageIds[0]} alt={product.name} fallback={sceneForProfile(product.specificationProfile)} priority /></div>
+        <h2 id="offer-title">{product.name}</h2>
+        <p className="price">{naira(product.sellingPrice)}</p>
+        <button className="btn" type="button" onClick={() => {
+          cart.add({ kind: 'product', id: product.id, slug: product.slug, name: product.name, unitPrice: product.sellingPrice, imageId: product.imageIds[0] });
+          navigate('/checkout');
+        }}>Buy now</button>
+      </div>
+    </div>
   );
 }
 
