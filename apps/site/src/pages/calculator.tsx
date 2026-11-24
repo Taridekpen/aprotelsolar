@@ -4,6 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { APPLIANCE_CATALOGUE, type ApplianceDefinition } from '@aprotel/solar-engine';
 import { api } from '../lib/api';
 import { cart } from '../lib/cart';
+import { PurchaseActions, recommendedProductMessage } from '../lib/whatsapp';
 import { naira, STATES } from '../lib/format';
 import { ErrorNote, useSeo } from '../components/chrome';
 import { Stepper } from './home';
@@ -292,7 +293,10 @@ function ResultView({ design, message, asking, setAsking, quote, reference }: {
               <li key={product.id}>
                 <strong>{product.quantity} × {product.name}</strong> — {naira(product.lineTotalNaira)}
                 <div className="note">{product.reason}</div>
-                <button className="btn-line" type="button" onClick={() => cart.add({ kind: 'product', id: product.id, slug: product.slug, name: product.name, unitPrice: product.unitPriceNaira.toFixed(2), quantity: product.quantity, imageId: product.imageId ?? undefined })}>Add to cart</button>
+                <PurchaseActions
+                  message={recommendedProductMessage(product)}
+                  onAdd={() => cart.add({ kind: 'product', id: product.id, slug: product.slug, name: product.name, unitPrice: product.unitPriceNaira.toFixed(2), quantity: product.quantity, imageId: product.imageId ?? undefined })}
+                />
               </li>
             ))}
           </ul>

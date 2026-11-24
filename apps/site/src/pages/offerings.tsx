@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api, apiList } from '../lib/api';
 import { cart } from '../lib/cart';
 import { mapsLink, naira } from '../lib/format';
+import { packageWhatsAppMessage, PurchaseActions, WhatsAppLink, whatsAppUrl } from '../lib/whatsapp';
 import type { ContentPage, Product, Service, SolarPackage } from '../lib/types';
 import { textBody } from '../lib/types';
 import { ErrorNote, Loading, Photo, useSeo } from '../components/chrome';
@@ -76,6 +77,17 @@ export function PackagesPage() {
             <p>{item.solarPanelCapacityKw} kW panels · {item.batteryCapacityKwh} kWh battery · {item.inverterSummary}</p>
             <p>At a stated load of {item.runtimeAssumptions.loadWatts} W{item.runtimeAssumptions.estimatedRuntimeHours != null ? `, the recorded assumption is ${item.runtimeAssumptions.estimatedRuntimeHours} hours` : ''}. {item.runtimeAssumptions.operatingNotes}</p>
             <p className="price">{naira(item.price)} <span className="note">plus {naira(item.installationCharge)} installation</span></p>
+            {item.availability === 'available' ? (
+              <PurchaseActions
+                message={packageWhatsAppMessage(item)}
+                onAdd={() => cart.add({ kind: 'package', id: item.id, slug: item.slug, name: item.name, unitPrice: item.price, imageId: item.imageIds[0] })}
+              />
+            ) : (
+              <p className="buy-actions">
+                <span className="note">This package is not available to purchase.</span>
+                <WhatsAppLink href={whatsAppUrl(packageWhatsAppMessage(item))} />
+              </p>
+            )}
           </div>
         </article>
       ))}
@@ -92,6 +104,10 @@ export function PackagePage() {
   if (itemQuery.isLoading) return <Loading />;
   if (!itemQuery.data) return <div className="wrap page"><ErrorNote error={itemQuery.error} /></div>;
   const item = itemQuery.data;
+  const included = item.items.map((part) => {
+    const product = products.data?.items.find((candidate) => candidate.id === part.productId);
+    return `${part.quantity} × ${product?.name ?? 'Published product'}`;
+  });
   return (
     <article className="wrap page">
       <p className="eyebrow">Package</p>
@@ -118,12 +134,20 @@ export function PackagePage() {
           return <li key={part.productId}>{part.quantity} × {product ? <Link to={`/products/${product.slug}`}>{product.name}</Link> : 'Published product'}</li>;
         })}
       </ul>
-      <p>
-        <Link className="btn" to={`/quote?package=${item.id}`}>Request a quotation</Link>
+      <div className="buy-actions">
         {item.availability === 'available' ? (
-          <button className="btn-line" type="button" onClick={() => cart.add({ kind: 'package', id: item.id, slug: item.slug, name: item.name, unitPrice: item.price, imageId: item.imageIds[0] })}>Add to cart</button>
-        ) : <span> This package is not available to purchase.</span>}
-      </p>
+          <PurchaseActions
+            message={packageWhatsAppMessage(item, included)}
+            onAdd={() => cart.add({ kind: 'package', id: item.id, slug: item.slug, name: item.name, unitPrice: item.price, imageId: item.imageIds[0] })}
+          />
+        ) : (
+          <>
+            <span>This package is not available to purchase.</span>
+            <WhatsAppLink href={whatsAppUrl(packageWhatsAppMessage(item, included))} />
+          </>
+        )}
+        <Link className="btn-line" to={`/quote?package=${item.id}`}>Request a quotation</Link>
+      </div>
     </article>
   );
 }

@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { APPLIANCE_CATALOGUE } from '@aprotel/solar-engine';
 import { api, apiList, queryString } from '../lib/api';
 import { cart } from '../lib/cart';
 import { naira } from '../lib/format';
+import { productWhatsAppMessage, PurchaseActions, whatsAppUrl } from '../lib/whatsapp';
 import type { Branch, Category, ContentPage, Entry, Product, Service, SolarPackage } from '../lib/types';
 import { textBody } from '../lib/types';
 import { ErrorNote, Loading, Photo, Reveal, useSeo } from '../components/chrome';
@@ -163,7 +164,11 @@ export function HomePage() {
                       <h3>{product.name}</h3>
                     </Link>
                     <strong className="price">{naira(product.sellingPrice)}</strong>
-                    <button className="btn" type="button" onClick={() => { cart.add({ kind: 'product', id: product.id, slug: product.slug, name: product.name, unitPrice: product.sellingPrice, imageId: product.imageIds[0] }); setAdded(product.id); }}>{added === product.id ? 'Added' : 'Add to cart'}</button>
+                    <PurchaseActions
+                      added={added === product.id}
+                      message={productWhatsAppMessage(product)}
+                      onAdd={() => { cart.add({ kind: 'product', id: product.id, slug: product.slug, name: product.name, unitPrice: product.sellingPrice, imageId: product.imageIds[0] }); setAdded(product.id); }}
+                    />
                   </article>
               ))}
             </div>
@@ -267,7 +272,6 @@ export function HomePage() {
 }
 
 function ProductOffer({ products }: { products: Product[] }) {
-  const navigate = useNavigate();
   const closeRef = useRef<HTMLButtonElement>(null);
   const [product] = useState(() => products[Math.floor(Math.random() * products.length)]!);
   const [open, setOpen] = useState(true);
@@ -294,10 +298,7 @@ function ProductOffer({ products }: { products: Product[] }) {
         <div className="offer-media"><Photo id={product.imageIds[0]} alt={product.name} fallback={sceneForProfile(product.specificationProfile)} priority /></div>
         <h2 id="offer-title">{product.name}</h2>
         <p className="price">{naira(product.sellingPrice)}</p>
-        <button className="btn" type="button" onClick={() => {
-          cart.add({ kind: 'product', id: product.id, slug: product.slug, name: product.name, unitPrice: product.sellingPrice, imageId: product.imageIds[0] });
-          navigate('/checkout');
-        }}>Buy now</button>
+        <a className="btn" href={whatsAppUrl(productWhatsAppMessage(product))} target="_blank" rel="noopener noreferrer">Buy now</a>
       </div>
     </div>
   );

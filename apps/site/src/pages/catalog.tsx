@@ -5,6 +5,7 @@ import { useSyncExternalStore } from 'react';
 import { api, apiList, queryString } from '../lib/api';
 import { cart, compareList, emptyCompare } from '../lib/cart';
 import { naira, specificationRows, mediaUrl } from '../lib/format';
+import { productWhatsAppMessage, PurchaseActions, WhatsAppLink, whatsAppUrl } from '../lib/whatsapp';
 import type { Category, Product } from '../lib/types';
 import { ErrorNote, Loading, Photo, useSeo } from '../components/chrome';
 import { sceneForProfile } from '../lib/scenes';
@@ -102,8 +103,11 @@ function ProductRow({ product }: { product: Product }) {
       <td><Link to={`/products/${product.slug}`}><strong>{product.name}</strong></Link><br /><span className="note">{product.brand} · {product.sku}</span></td>
       <td className="price">{naira(product.sellingPrice)}</td>
       <td>
-        <button className="btn" type="button" onClick={() => cart.add({ kind: 'product', id: product.id, slug: product.slug, name: product.name, unitPrice: product.sellingPrice, imageId: product.imageIds[0] })}>Add</button>
-        <button className="btn-line" type="button" onClick={() => compareList.toggle(product.slug)}>{selected ? 'Compared' : 'Compare'}</button>
+        <div className="buy-actions">
+          <button className="btn" type="button" onClick={() => cart.add({ kind: 'product', id: product.id, slug: product.slug, name: product.name, unitPrice: product.sellingPrice, imageId: product.imageIds[0] })}>Add to cart</button>
+          <WhatsAppLink href={whatsAppUrl(productWhatsAppMessage(product))} />
+          <button className="btn-line" type="button" onClick={() => compareList.toggle(product.slug)}>{selected ? 'Compared' : 'Compare'}</button>
+        </div>
       </td>
     </tr>
   );
@@ -145,6 +149,7 @@ export function ProductPage() {
   if (product.error || !product.data) return <div className="wrap page"><ErrorNote error={product.error ?? new Error('Product was not found')} /></div>;
   const item = product.data;
   const rows = specificationRows(item.specifications);
+  const relatedItems = related.data?.items.filter((other) => other.id !== item.id).slice(0, 4) ?? [];
   const current = item.imageIds[image] ?? item.imageIds[0];
   return (
     <article className="wrap page">
@@ -163,13 +168,15 @@ export function ProductPage() {
           <p className="eyebrow">{item.brand}</p>
           <h1>{item.name}</h1>
           <p className="price">{naira(item.sellingPrice)}{item.compareAtPrice ? <span className="compare-at">{naira(item.compareAtPrice)}</span> : null}</p>
-          <p className="note">Catalogue price. Aprotel confirms the total when you send a request.</p>
+          <p className="note">Catalogue price. Aprotel confirms the total on WhatsApp.</p>
           <p>{item.shortDescription}</p>
           <label className="field">Quantity<input type="number" min={1} max={99} value={quantity} onChange={(event) => setQuantity(Number(event.target.value))} /></label>
-          <p>
-            <button className="btn" type="button" disabled={quantity < 1} onClick={() => cart.add({ kind: 'product', id: item.id, slug: item.slug, name: item.name, unitPrice: item.sellingPrice, quantity, imageId: item.imageIds[0] })}>Add to cart</button>
-            <Link className="btn-line" to={`/contact?product=${item.id}&type=installation`}>Installation enquiry</Link>
-          </p>
+          <PurchaseActions
+            disabled={quantity < 1}
+            message={productWhatsAppMessage(item, Math.max(1, quantity))}
+            onAdd={() => cart.add({ kind: 'product', id: item.id, slug: item.slug, name: item.name, unitPrice: item.sellingPrice, quantity, imageId: item.imageIds[0] })}
+          />
+          <p><Link className="btn-line" to={`/contact?product=${item.id}&type=installation`}>Installation enquiry</Link></p>
           {item.warranty ? <p><strong>Warranty.</strong> {item.warranty}</p> : null}
           {item.installationRequirements ? <p>{item.installationRequirements}</p> : null}
           <p className="note">{item.specificationsVerified ? 'Electrical specifications are marked verified by Aprotel engineering.' : 'Specifications are published as supplied. They have not been marked verified.'} No separate compatibility list is published for this product.</p>
@@ -184,11 +191,20 @@ export function ProductPage() {
       <h2>Description</h2>
       <p>{item.description}</p>
       <h2>Related equipment</h2>
-      <ul>
-        {related.data?.items.filter((other) => other.id !== item.id).slice(0, 4).map((other) => (
-          <li key={other.id}><Link to={`/products/${other.slug}`}>{other.name}</Link> — {naira(other.sellingPrice)}</li>
-        ))}
-      </ul>
+      {relatedItems.length === 0 ? <p>No related equipment is published.</p> : (
+        <div className="product-row">
+          {relatedItems.map((other) => (
+            <article className="product-card" key={other.id}>
+              <Link to={`/products/${other.slug}`}>
+                <div className="media"><Photo id={other.imageIds[0]} alt={other.name} fallback={sceneForProfile(other.specificationProfile)} /></div>
+                <h3>{other.name}</h3>
+                <strong className="price">{naira(other.sellingPrice)}</strong>
+              </Link>
+              <WhatsAppLink href={whatsAppUrl(productWhatsAppMessage(other))} />
+            </article>
+          ))}
+        </div>
+      )}
     </article>
   );
 }
